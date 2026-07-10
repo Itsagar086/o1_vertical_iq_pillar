@@ -1,10 +1,950 @@
-/* styles.css */
-*, *::before, *::after {
+/* ============================================================
+   GOOGLE FONTS IMPORT
+   Lilita One  — main display title
+   Fredoka One — large numbers & card values
+   Nunito      — UI labels, hints, buttons (700/800/900)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Fredoka+One&family=Nunito:wght@700;800;900&display=swap');
+
+
+/* ============================================================
+   CSS CUSTOM PROPERTIES — DESIGN TOKENS
+   ============================================================ */
+:root {
+  /* ── Layout ── */
+  --game-w: 390px;
+  --left-panel-w: 86px;
+  --h-pad: 5px;
+  --panel-gap: 5px;
+
+  /* ── Background palette ── */
+  --bg-deepest: #04021a;
+  --bg-deep: #08052b;
+  --bg-mid: #0d0a35;
+  --bg-hero: #160d58;
+
+  /* ── Purple scale ── */
+  --p-900: #140440;
+  --p-800: #1e0854;
+  --p-700: #2e0f7a;
+  --p-600: #4c1d95;
+  --p-500: #6d28d9;
+  --p-400: #7c3aed;
+  --p-300: #a855f7;
+  --p-200: #c4b5fd;
+  --p-100: #ede9fe;
+
+  /* ── Gold scale ── */
+  --gold-hi: #fff5a0;
+  --gold-mid: #ffd700;
+  --gold-warm: #ffa500;
+  --gold-low: #e07000;
+  --gold-dark: #c87000;
+
+  /* ── Semantic UI ── */
+  --cream-board: #f5f0e2;
+  --cream-cell: #faf7ee;
+  --cell-border: #c8b898;
+  --cell-text: #2a1808;
+  --blue-deep: #1e3a8a;
+  --blue-mid: #2563eb;
+  --blue-bright: #3b82f6;
+  --green-badge: #10b981;
+  --green-dark: #059669;
+  --indigo-mid: #4338ca;
+  --indigo-dark: #3730a3;
+
+  /* ── Typography ── */
+  --ff-title: 'Lilita One', cursive;
+  --ff-display: 'Fredoka One', cursive;
+  --ff-body: 'Nunito', sans-serif;
+
+  /* ── Radii ── */
+  --r-pill: 999px;
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  --r-xs: 5px;
+
+  /* ── Glows & Shadows ── */
+  --glow-gold: 0 0 14px 3px rgba(255, 215, 0, 0.55);
+  --glow-gold-sm: 0 0 8px 2px rgba(255, 215, 0, 0.40);
+  --glow-purple: 0 0 16px 4px rgba(109, 40, 217, 0.50);
+  --glow-blue: 0 0 12px 3px rgba(37, 99, 235, 0.50);
+  --shadow-deep: 0 6px 24px rgba(0, 0, 0, 0.55);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
+html,
 body {
-  font-family: sans-serif;
+  height: 100%;
+  font-family: var(--ff-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  background: #000;
+  overflow-x: hidden;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  outline: none;
+  background: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+ol,
+ul {
+  list-style: none;
+}
+
+figure {
+  display: block;
+}
+
+
+/* ============================================================
+   GAME WRAPPER
+   ============================================================ */
+.game-wrapper {
+  position: relative;
+  width: var(--game-w);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  /* Deep space background */
+  background:
+    /* Top-center nebula glow */
+    radial-gradient(ellipse 90% 55% at 50% -5%, #1f1080 0%, transparent 65%),
+    /* Bottom-left secondary glow */
+    radial-gradient(ellipse 60% 40% at 10% 100%, #0e0860 0%, transparent 60%),
+    /* Bottom-right accent */
+    radial-gradient(ellipse 50% 35% at 90% 90%, #0a0550 0%, transparent 55%),
+    /* Base gradient */
+    linear-gradient(180deg, #0c0a30 0%, #070520 50%, #040218 100%);
+}
+
+/* ── Starfield Overlay ── */
+.game-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    /* Bright stars */
+    radial-gradient(circle 1.5px at 8% 6%, rgba(255, 255, 255, 0.95) 0%, transparent 1.5px),
+    radial-gradient(circle 1px at 19% 3%, rgba(255, 255, 255, 0.80) 0%, transparent 1px),
+    radial-gradient(circle 1.5px at 34% 10%, rgba(255, 255, 255, 0.90) 0%, transparent 1.5px),
+    radial-gradient(circle 1px at 52% 2%, rgba(255, 255, 255, 0.70) 0%, transparent 1px),
+    radial-gradient(circle 1.5px at 67% 8%, rgba(255, 255, 255, 0.85) 0%, transparent 1.5px),
+    radial-gradient(circle 1px at 80% 4%, rgba(255, 255, 255, 0.75) 0%, transparent 1px),
+    radial-gradient(circle 1px at 93% 11%, rgba(255, 255, 255, 0.65) 0%, transparent 1px),
+    /* Dim stars */
+    radial-gradient(circle 1px at 12% 28%, rgba(255, 255, 255, 0.40) 0%, transparent 1px),
+    radial-gradient(circle 1px at 72% 22%, rgba(255, 255, 255, 0.35) 0%, transparent 1px),
+    radial-gradient(circle 1px at 88% 35%, rgba(255, 255, 255, 0.30) 0%, transparent 1px),
+    radial-gradient(circle 1px at 45% 18%, rgba(255, 255, 255, 0.45) 0%, transparent 1px),
+    /* Bright sparkle dots */
+    radial-gradient(circle 2px at 27% 1%, rgba(255, 255, 255, 0.70) 0%, transparent 2px),
+    radial-gradient(circle 2px at 74% 1%, rgba(255, 255, 255, 0.60) 0%, transparent 2px);
+}
+
+/* Ensure all direct children stack above the pseudo-element */
+.game-wrapper>* {
+  position: relative;
+  z-index: 1;
+}
+
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px var(--h-pad) 5px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Top Bar ── */
+.top-bar {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.option-label {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.option-num,
+.option-name {
+  font-family: var(--ff-body);
+  font-size: 8.5px;
+  font-weight: 800;
+  color: var(--gold-mid);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* ── Sound Button ── */
+.sound-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 33%, #5b21b6, #2d0f6a);
+  border: 2px solid rgba(196, 181, 253, 0.50);
+  color: var(--p-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 12px rgba(168, 85, 247, 0.50),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  flex-shrink: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.sound-btn:active {
+  transform: scale(0.90);
+  box-shadow: 0 0 6px rgba(168, 85, 247, 0.30);
+}
+
+/* ── Title Area ── */
+.title-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.title-stars {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-self: center;
+}
+
+.star {
+  color: var(--gold-mid);
+  line-height: 1;
+  text-shadow:
+    0 0 8px var(--gold-mid),
+    0 0 18px rgba(255, 215, 0, 0.40);
+}
+
+.star--lg {
+  font-size: 13px;
+}
+
+.star--sm {
+  font-size: 8px;
+}
+
+/* ── Main Title ── */
+.main-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  font-family: var(--ff-title);
+  text-transform: uppercase;
+  line-height: 0.98;
+  text-align: center;
+}
+
+.title-line1 {
+  font-size: 40px;
+  background: linear-gradient(180deg,
+      #fffa80 0%,
+      #ffe040 20%,
+      var(--gold-mid) 45%,
+      var(--gold-warm) 70%,
+      #d85000 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 8px rgba(255, 150, 0, 0.60));
+}
+
+.title-line2 {
+  font-size: 30px;
+  background: linear-gradient(180deg,
+      #fff070 0%,
+      var(--gold-mid) 40%,
+      var(--gold-warm) 70%,
+      #cc4400 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 6px rgba(255, 130, 0, 0.55));
+}
+
+/* ── Mission Banner ── */
+.mission-banner {
+  background: linear-gradient(180deg, #4338ca 0%, #3730a3 55%, #312e81 100%);
+  border: 1.5px solid rgba(165, 180, 252, 0.55);
+  border-radius: var(--r-pill);
+  padding: 5px 22px 6px;
+  box-shadow:
+    0 0 16px rgba(99, 102, 241, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
+  margin-top: 2px;
+}
+
+.mission-text {
+  font-family: var(--ff-body);
+  font-size: 12px;
+  font-weight: 900;
+  color: #e8ecff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+
+/* ============================================================
+   MAIN CONTENT — Two-column flex layout
+   ============================================================ */
+.main-content {
+  display: flex;
+  flex: 1;
+  gap: var(--panel-gap);
+  padding: 6px var(--h-pad) 2px;
+  align-items: stretch;
+  min-height: 0;
+}
+
+
+/* ============================================================
+   LEFT PANEL
+   Brain Icon → IQ Card → Vertical IQ Pillar + Scale
+   ============================================================ */
+.left-panel {
+  width: var(--left-panel-w);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ── Brain Icon ── */
+.brain-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  margin: 0;
+  border: none;
+  background: none;
+}
+
+.brain-ring {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  /* Rainbow conic gradient border */
+  background: conic-gradient(from 0deg,
+      #ff0055 0deg,
+      #ff4400 40deg,
+      #ff8800 80deg,
+      #ffdd00 120deg,
+      #88ff00 160deg,
+      #00ffaa 200deg,
+      #00ccff 240deg,
+      #4444ff 280deg,
+      #bb00ff 320deg,
+      #ff0055 360deg);
+  padding: 3.5px;
+  box-shadow:
+    0 0 22px rgba(200, 80, 255, 0.70),
+    0 0 44px rgba(100, 100, 255, 0.30),
+    0 0 8px rgba(255, 200, 0, 0.25);
+}
+
+.brain-inner {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #3a1480, #1e0a50);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid rgba(220, 180, 255, 0.18);
+}
+
+.brain-emoji {
+  font-size: 38px;
+  line-height: 1;
+  /* Boost brightness and saturation to match reference */
+  filter: brightness(1.25) saturate(1.35);
+}
+
+/* Sparkle decorations around the brain ring */
+.sparkle {
+  position: absolute;
+  color: var(--gold-mid);
+  text-shadow: 0 0 8px var(--gold-mid), 0 0 20px rgba(255, 215, 0, 0.40);
+  line-height: 1;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sp-a {
+  top: 0px;
+  right: 3px;
+  font-size: 12px;
+}
+
+.sp-b {
+  bottom: 3px;
+  left: 0px;
+  font-size: 7px;
+}
+
+.sp-c {
+  top: 50%;
+  right: -3px;
+  transform: translateY(-50%);
+  font-size: 9px;
+}
+
+/* ── IQ Card ── */
+.iq-card {
+  width: 88px;
+  background: linear-gradient(180deg, #1e0a54 0%, #130730 100%);
+  border: 2.5px solid var(--gold-mid);
+  border-radius: var(--r-md);
+  padding: 5px 8px 7px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  box-shadow:
+    var(--glow-gold),
+    var(--shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.iq-label {
+  font-family: var(--ff-body);
+  font-size: 8px;
+  font-weight: 900;
+  color: var(--gold-mid);
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+.iq-number {
+  font-family: var(--ff-display);
+  font-size: 44px;
+  color: #ffffff;
+  line-height: 1.0;
+  text-shadow: 0 0 24px rgba(255, 255, 255, 0.35);
+}
+
+.iq-tier {
+  font-family: var(--ff-body);
+  font-size: 7.5px;
+  font-weight: 900;
+  color: var(--p-200);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+/* ── Vertical IQ Pillar + Scale ── */
+.pillar-section {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 3px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  justify-content: center;
+}
+
+/* Tube container (cap-top + body + cap-bottom + base glow) */
+.tube-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* ── Tube Cap (top rounded pill end) ── */
+.tube-cap-top {
+  width: 28px;
+  height: 9px;
+  background: linear-gradient(180deg, #9333ea, #5b21b6);
+  border-radius: 8px 8px 0 0;
+  border: 1.5px solid rgba(216, 180, 254, 0.55);
+  border-bottom: none;
+}
+
+/* ── Tube Body ── */
+.tube-body {
+  width: 28px;
+  flex: 1;
+  min-height: 120px;
+  position: relative;
+  overflow: hidden;
+  border-left: 1.5px solid rgba(216, 180, 254, 0.40);
+  border-right: 1.5px solid rgba(216, 180, 254, 0.40);
+}
+
+/* Rainbow fill — red at bottom, violet at top */
+.tube-rainbow-fill {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top,
+      #cc0000 0%,
+      #ee2200 4%,
+      #ff4400 8%,
+      #ff6600 13%,
+      #ff8800 18%,
+      #ffaa00 24%,
+      #ffcc00 30%,
+      #ffe000 36%,
+      #ccff00 43%,
+      #66ee33 50%,
+      #00dd88 57%,
+      #00ccee 63%,
+      #0099ff 70%,
+      #2255ff 77%,
+      #4400cc 84%,
+      #7700ee 91%,
+      #aa00ff 100%);
+}
+
+/* Cylindrical glare highlight (left side) */
+.tube-glare {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  width: 6px;
+  bottom: 0;
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0.40) 0%,
+      rgba(255, 255, 255, 0.12) 60%,
+      transparent 100%);
+  border-radius: 3px 0 0 3px;
+  pointer-events: none;
+}
+
+/* ── Tube Cap (bottom rounded end) ── */
+.tube-cap-bottom {
+  width: 28px;
+  height: 9px;
+  background: linear-gradient(180deg, #4c1d95, #2e0f5a);
+  border-radius: 0 0 6px 6px;
+  border: 1.5px solid rgba(216, 180, 254, 0.40);
+  border-top: none;
+}
+
+/* ── Glow Base Platform ── */
+.tube-glow-base {
+  width: 48px;
+  height: 10px;
+  margin-top: 3px;
+  background: radial-gradient(ellipse at 50% 100%,
+      rgba(148, 0, 255, 0.90) 0%,
+      rgba(80, 0, 200, 0.45) 55%,
+      transparent 100%);
+  filter: blur(4px);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Scale Labels ── */
+.scale-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  /* Top padding aligns "100" with top of tube body;
+     Bottom padding aligns "0" with bottom of tube body */
+  padding-top: 9px;
+  padding-bottom: 23px;
+  flex: 1;
+  min-height: 0;
+}
+
+.scale-mark {
+  font-family: var(--ff-body);
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--p-200);
+  white-space: nowrap;
+  line-height: 1;
+  letter-spacing: 0.2px;
+}
+
+.tick {
+  display: inline-block;
+  margin-right: 1px;
+  color: rgba(196, 181, 253, 0.60);
+}
+
+
+/* ============================================================
+   RIGHT PANEL
+   Stats Row → Hint Banner → Board Container
+   ============================================================ */
+.right-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Score Card + Target Card ── */
+.stats-row {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.stat-card {
+  flex: 1;
+  background: linear-gradient(180deg, #1e0a54 0%, #130730 100%);
+  border: 2.5px solid var(--gold-mid);
+  border-radius: var(--r-md);
+  padding: 7px 9px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  box-shadow:
+    var(--glow-gold-sm),
+    var(--shadow-card),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+
+.stat-icon {
+  font-size: 26px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 0, 0.75));
+}
+
+.stat-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.stat-label {
+  font-family: var(--ff-body);
+  font-size: 8px;
+  font-weight: 900;
+  color: var(--p-200);
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.stat-value {
+  font-family: var(--ff-display);
+  font-size: 26px;
+  color: #ffffff;
+  line-height: 1.05;
+  text-shadow: 0 0 14px rgba(255, 255, 255, 0.30);
+}
+
+/* ── Hint Banner ── */
+.hint-banner {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, #1b1065 0%, #231280 100%);
+  border: 1.5px solid rgba(139, 92, 246, 0.38);
+  border-radius: var(--r-sm);
+  padding: 7px 10px;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 10px rgba(99, 102, 241, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hint-bulb {
+  font-size: 19px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.hint-text {
+  font-family: var(--ff-body);
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #ddd6fe;
+  flex: 1;
+  line-height: 1.2;
+}
+
+.hint-num {
+  min-width: 32px;
+  height: 30px;
+  padding: 0 6px;
+  background: linear-gradient(180deg, #4f46e5 0%, #3730a3 100%);
+  border-radius: var(--r-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-display);
+  font-size: 19px;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow:
+    0 0 12px rgba(99, 102, 241, 0.70),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+/* ── Board Container ── */
+.board-container {
+  flex: 1;
+  min-height: 0;
+  background: linear-gradient(180deg, #f7f2e3 0%, #ede7d0 100%);
+  border: 2.5px solid rgba(218, 175, 50, 0.60);
+  border-radius: var(--r-md);
+  padding: 4px;
+
+  /* 10-column CSS Grid */
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 2px;
+
+  box-shadow:
+    0 0 20px rgba(255, 215, 0, 0.18),
+    inset 0 2px 8px rgba(255, 255, 255, 0.55),
+    var(--shadow-card);
+}
+
+/* ── Grid Cell ── */
+.cell {
+  aspect-ratio: 1 / 1;
+  background: var(--cream-cell);
+  border: 1px solid var(--cell-border);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--ff-body);
+  font-size: 11.5px;
+  font-weight: 900;
+  color: var(--cell-text);
+  /* Inner top highlight for depth */
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(0, 0, 0, 0.09);
+  user-select: none;
+  cursor: default;
+}
+
+/* Highlighted cell (first cell, gold border) */
+.cell.highlighted {
+  background: linear-gradient(180deg, #fffce0 0%, #fff4a8 100%);
+  border: 2px solid var(--gold-mid);
+  color: var(--gold-dark);
+  font-size: 12px;
+  box-shadow:
+    0 0 8px rgba(255, 215, 0, 0.75),
+    inset 0 1px 3px rgba(255, 255, 255, 0.95);
+}
+
+/* Ghost / empty cell (staircase top-right) */
+.cell.ghost {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+
+/* ============================================================
+   BOTTOM BUTTONS
+   ============================================================ */
+.bottom-buttons {
+  display: flex;
+  gap: 8px;
+  padding: 7px var(--h-pad);
+  flex-shrink: 0;
+}
+
+.action-btn {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 10px 6px;
+  border-radius: var(--r-pill);
+  border: 1.5px solid rgba(196, 181, 253, 0.42);
+  background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 55%, #4c1d95 100%);
+  box-shadow:
+    0 4px 16px rgba(76, 29, 149, 0.58),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.95) translateY(1px);
+  box-shadow: 0 2px 8px rgba(76, 29, 149, 0.40);
+}
+
+/* Count badge (top-right corner) */
+.btn-badge {
+  position: absolute;
+  top: -8px;
+  right: 0px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  background: linear-gradient(135deg, var(--green-badge), var(--green-dark));
+  border: 2px solid #ffffff;
+  border-radius: var(--r-pill);
+  font-family: var(--ff-body);
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.30);
+}
+
+.btn-icon {
+  font-size: 17px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+/* SVG icon inside shuffle button */
+.shuffle-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 0;
+}
+
+.btn-label {
+  font-family: var(--ff-body);
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+
+/* ============================================================
+   FOOTER CTA
+   ============================================================ */
+.footer-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%);
+  border-top: 2px solid rgba(147, 197, 253, 0.32);
+  box-shadow: 0 -5px 22px rgba(37, 99, 235, 0.38);
+  flex-shrink: 0;
+}
+
+.footer-text {
+  font-family: var(--ff-body);
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #bfdbfe;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: center;
+  line-height: 1;
+}
+
+.footer-strong {
+  color: #ffffff;
+  font-weight: 900;
+}
+
+.footer-gold {
+  color: var(--gold-mid);
+  font-weight: 900;
+}
+
+.footer-rocket {
+  font-size: 24px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px rgba(255, 200, 50, 0.50));
+}
+
+
+/* ============================================================
+   RESPONSIVE — scales down for narrower viewports
+   ============================================================ */
+@media (max-width: 400px) {
+  :root {
+    --game-w: 100vw;
+  }
+
+  .title-line1 {
+    font-size: 34px;
+  }
+
+  .title-line2 {
+    font-size: 26px;
+  }
+
+  .iq-number {
+    font-size: 38px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .cell {
+    font-size: 11px;
+  }
+
+  .btn-label {
+    font-size: 10px;
+    letter-spacing: 0.8px;
+  }
 }
