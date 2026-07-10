@@ -13,7 +13,7 @@
 :root {
   /* ── Layout ── */
   --game-w: 390px;
-  --left-panel-w: 86px;
+  --left-panel-w: 92px;
   --h-pad: 5px;
   --panel-gap: 5px;
 
@@ -183,8 +183,8 @@ figure {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 10px var(--h-pad) 5px;
-  gap: 4px;
+  padding: 4px var(--h-pad) 0px; /* Reduced top/bottom padding to tighten header height */
+  gap: 2px; /* Reduced vertical gap between header subcomponents */
   flex-shrink: 0;
 }
 
@@ -197,9 +197,7 @@ figure {
 }
 
 .option-label {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
+  display: none; /* Hidden to remove the label text from the page */
 }
 
 .option-num,
@@ -241,7 +239,7 @@ figure {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 2px;
+  margin-top: 0px; /* Removed margin-top to raise title closer to option label */
 }
 
 .title-stars {
@@ -311,12 +309,12 @@ figure {
   background: linear-gradient(180deg, #4338ca 0%, #3730a3 55%, #312e81 100%);
   border: 1.5px solid rgba(165, 180, 252, 0.55);
   border-radius: var(--r-pill);
-  padding: 5px 22px 6px;
+  padding: 3px 22px 4px; /* Reduced top/bottom padding to make the banner more compact */
   box-shadow:
     0 0 16px rgba(99, 102, 241, 0.55),
     inset 0 1px 0 rgba(255, 255, 255, 0.20),
     inset 0 -1px 0 rgba(0, 0, 0, 0.20);
-  margin-top: 2px;
+  margin-top: 0px; /* Removed margin-top to position banner directly under the title */
 }
 
 .mission-text {
@@ -353,6 +351,8 @@ figure {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  margin-top: -110px; /* Pull left panel elements up to align with title area */
+  margin-bottom: -110px; /* Stretch bottom down to align with main content bottom without collapsing height */
 }
 
 /* ── Brain Icon ── */
@@ -498,6 +498,7 @@ figure {
   flex-direction: column;
   align-items: center;
   flex-shrink: 0;
+  height: 100%; /* Stretch the tube container to the full height of pillar-section */
 }
 
 /* ── Tube Cap (top rounded pill end) ── */
@@ -736,9 +737,10 @@ figure {
   border-radius: var(--r-md);
   padding: 4px;
 
-  /* 10-column CSS Grid */
+  /* 10x10 CSS Grid */
   display: grid;
   grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
   gap: 2px;
 
   box-shadow:
@@ -749,7 +751,6 @@ figure {
 
 /* ── Grid Cell ── */
 .cell {
-  aspect-ratio: 1 / 1;
   background: var(--cream-cell);
   border: 1px solid var(--cell-border);
   border-radius: 4px;
