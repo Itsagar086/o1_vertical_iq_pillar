@@ -197,17 +197,19 @@ class SelectionManager {
           window.playableAdController.spawnFloatingReward(idx1, idx2, true);
         }
 
+        // Call handleMatch immediately for instant feedback
+        if (this.onMatchFound) {
+          this.onMatchFound(idx1, idx2);
+        }
+
         setTimeout(() => {
           this.boardManager.removeCell(idx1);
           this.boardManager.removeCell(idx2);
           cell1.classList.remove('matched-anim');
           cell2.classList.remove('matched-anim');
           this.clearSelection();
-          if (this.onMatchFound) {
-            this.onMatchFound(idx1, idx2);
-          }
           this.isProcessing = false;
-        }, 400);
+        }, 150);
       } else {
         // Play wrong animation (shake + red flash)
         const cell1 = this.boardManager.cells[idx1];
@@ -718,19 +720,19 @@ class PlayableAdController {
       }
       @keyframes float-reward-anim {
         0% { transform: scale(0.3) translateY(0); opacity: 0; }
-        50% { transform: scale(1.1) translateY(-20px); opacity: 1; }
-        100% { transform: scale(1) translateY(-40px); opacity: 0; }
+        50% { transform: scale(1.3) translateY(-30px); opacity: 1; }
+        100% { transform: scale(1.1) translateY(-60px); opacity: 0; }
       }
       @keyframes float-up {
         0% { transform: scale(0.5) translateY(0); opacity: 1; }
-        100% { transform: scale(1.2) translateY(-60px); opacity: 0; }
+        100% { transform: scale(1.4) translateY(-80px); opacity: 0; }
       }
       .particle {
         position: absolute;
         pointer-events: none;
         z-index: 90;
         opacity: 1;
-        animation: burst 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+        animation: burst 0.4s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
       }
       @keyframes burst {
         to {
@@ -739,11 +741,11 @@ class PlayableAdController {
         }
       }
       .pulse {
-        animation: pulse-element 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        animation: pulse-element 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       @keyframes pulse-element {
         0% { transform: scale(1); }
-        50% { transform: scale(1.25); filter: brightness(1.2); }
+        50% { transform: scale(1.4); filter: brightness(1.5); }
         100% { transform: scale(1); }
       }
       .wrong-anim {
@@ -762,12 +764,12 @@ class PlayableAdController {
         100% { box-shadow: 0 0 12px var(--gold-mid); border-color: var(--gold-hi); }
       }
       .matched-anim {
-        animation: cellMatched 0.4s ease-out forwards;
+        animation: cellMatched 0.25s ease-out forwards;
         pointer-events: none;
       }
       @keyframes cellMatched {
         0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); filter: brightness(1.25); }
-        50% { transform: scale(1.15); opacity: 0.8; }
+        50% { transform: scale(1.3); opacity: 0.9; }
         100% { transform: scale(0); opacity: 0; }
       }
       
@@ -962,36 +964,38 @@ class PlayableAdController {
   handleAutoTutorial() {
     const t = parseFloat(this.currentTime.toFixed(1));
 
-    // Pair 1: Row 2 Col 0 (index 10, value '2') & Row 2 Col 1 (index 11, value '2')
-    if (t === 1.2) {
-      this.setHandTargetCell(10);
-    }
-    if (t === 3.0) {
-      this.tapCell(10);
-    }
-    if (t === 4.2) {
-      this.setHandTargetCell(11);
-    }
-    if (t === 6.0) {
-      this.tapCell(11);
-    }
+    // Pair 1: 10 & 11
+    if (t === 0.5) this.setHandTargetCell(10);
+    if (t === 1.2) this.tapCell(10);
+    if (t === 1.6) this.setHandTargetCell(11);
+    if (t === 2.3) this.tapCell(11);
 
-    // Pair 2: Row 5 Col 0 (index 40, value '3') & Row 5 Col 1 (index 41, value '7')
-    if (t === 8.2) {
-      this.setHandTargetCell(40);
-    }
-    if (t === 10.0) {
-      this.tapCell(40);
-    }
-    if (t === 11.2) {
-      this.setHandTargetCell(41);
-    }
-    if (t === 13.0) {
-      this.tapCell(41);
-    }
+    // Pair 2: 40 & 41
+    if (t === 3.0) this.setHandTargetCell(40);
+    if (t === 3.7) this.tapCell(40);
+    if (t === 4.1) this.setHandTargetCell(41);
+    if (t === 4.8) this.tapCell(41);
 
-    // Transition to "YOUR TURN!" at 13.8s
-    if (t === 13.8) {
+    // Pair 3: 31 & 32
+    if (t === 5.5) this.setHandTargetCell(31);
+    if (t === 6.2) this.tapCell(31);
+    if (t === 6.6) this.setHandTargetCell(32);
+    if (t === 7.3) this.tapCell(32);
+
+    // Pair 4: 42 & 43
+    if (t === 8.0) this.setHandTargetCell(42);
+    if (t === 8.7) this.tapCell(42);
+    if (t === 9.1) this.setHandTargetCell(43);
+    if (t === 9.8) this.tapCell(43);
+
+    // Pair 5: 53 & 54
+    if (t === 10.5) this.setHandTargetCell(53);
+    if (t === 11.2) this.tapCell(53);
+    if (t === 11.6) this.setHandTargetCell(54);
+    if (t === 12.3) this.tapCell(54);
+
+    // Transition to "YOUR TURN!" at 13.5s
+    if (t === 13.5) {
       this.hideHand();
       this.showMessage("YOUR TURN!");
     }
@@ -1037,7 +1041,7 @@ class PlayableAdController {
       if (this.isAdEnded) return;
 
       // Smooth Easing Interpolation (Lerp) for Hand Movement
-      const lerpFactor = 0.08;
+      const lerpFactor = 0.28;
       this.handCurrentX += (this.handTargetX - this.handCurrentX) * lerpFactor;
       this.handCurrentY += (this.handTargetY - this.handCurrentY) * lerpFactor;
 
@@ -1110,7 +1114,7 @@ class PlayableAdController {
     const now = Date.now();
     let isCombo = false;
 
-    if (now - this.lastMatchTime < 3000) {
+    if (this.currentTime >= 15.0 && now - this.lastMatchTime < 3000) {
       this.comboCount++;
       isCombo = true;
       if (this.comboCount === 1) points += 15;
@@ -1231,8 +1235,8 @@ class PlayableAdController {
       const x = rect.left - wrapperRect.left + rect.width / 2;
       const y = rect.top - wrapperRect.top + rect.height / 2;
 
-      // Burst lightweight sparkle particles (10 circles)
-      for (let i = 0; i < 10; i++) {
+      // Burst lightweight sparkle particles (25 circles)
+      for (let i = 0; i < 25; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
         const colors = ['#ffd700', '#c4b5fd', '#818cf8', '#a7f3d0'];
