@@ -190,10 +190,11 @@ class SelectionManager {
         cell1.classList.add('matched-anim');
         cell2.classList.add('matched-anim');
 
-        // Spawn particles
+        // Spawn particles & visual rewards
         if (window.playableAdController) {
           window.playableAdController.spawnMatchParticles(idx1, idx2);
           window.playableAdController.spawnFloatingScore(idx1, idx2);
+          window.playableAdController.spawnFloatingReward(idx1, idx2, true);
         }
 
         setTimeout(() => {
@@ -217,6 +218,7 @@ class SelectionManager {
         if (window.playableAdController) {
           window.playableAdController.soundManager.playWrong();
           window.playableAdController.handleWrongMatch();
+          window.playableAdController.spawnFloatingReward(idx1, idx2, false);
           window.playableAdController.resetIdleTimer();
         }
 
@@ -284,7 +286,7 @@ class GameEngine {
     this.boardManager = null;
     this.selectionManager = null;
     this.score = 0;
-    this.iq = 0; // Playable Requirement: starts at 0
+    this.iq = 0;
     this.isPaused = false;
     this.isWon = false;
   }
@@ -333,7 +335,7 @@ class GameEngine {
     // Expose engine globally for testing/automation hooks
     window.gameEngine = this;
 
-    // Instantiate Playable Ad Controller to drive 35s game flow
+    // Instantiate Playable Ad Controller to drive 35s game flow and polish
     window.playableAdController = new PlayableAdController(this);
     window.playableAdController.init();
   }
@@ -400,24 +402,28 @@ class GameEngine {
 class SoundManager {
   constructor() {
     this.ctx = null;
+    this.muted = false;
   }
 
   init() {
     if (!this.ctx) {
       this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
   }
 
   playClick() {
+    if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(600, now);
     gain.gain.setValueAtTime(0.08, now);
-    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
@@ -425,8 +431,8 @@ class SoundManager {
   }
 
   playCorrect() {
+    if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const freqs = [800, 1000, 1200, 1500];
     freqs.forEach((f, i) => {
@@ -434,8 +440,8 @@ class SoundManager {
       const gain = this.ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(f, now + i * 0.06);
-      gain.gain.setValueAtTime(0.12, now + i * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.005, now + i * 0.06 + 0.12);
+      gain.gain.setValueAtTime(0.1, now + i * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.06 + 0.12);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(now + i * 0.06);
@@ -444,16 +450,16 @@ class SoundManager {
   }
 
   playWrong() {
+    if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'triangle';
     osc.frequency.setValueAtTime(150, now);
     osc.frequency.linearRampToValueAtTime(80, now + 0.15);
-    gain.gain.setValueAtTime(0.18, now);
-    gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
@@ -461,16 +467,16 @@ class SoundManager {
   }
 
   playLevelUp() {
+    if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sawtooth';
     osc.frequency.setValueAtTime(250, now);
     osc.frequency.exponentialRampToValueAtTime(800, now + 0.35);
-    gain.gain.setValueAtTime(0.08, now);
-    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
     osc.connect(gain);
     gain.connect(this.ctx.destination);
     osc.start(now);
@@ -478,8 +484,8 @@ class SoundManager {
   }
 
   playVictory() {
+    if (this.muted) return;
     this.init();
-    if (!this.ctx) return;
     const now = this.ctx.currentTime;
     const notes = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99, 1046.50];
     notes.forEach((f, i) => {
@@ -487,21 +493,37 @@ class SoundManager {
       const gain = this.ctx.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(f, now + i * 0.08);
-      gain.gain.setValueAtTime(0.12, now + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.01, now + i * 0.08 + 0.25);
+      gain.gain.setValueAtTime(0.1, now + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
       osc.connect(gain);
       gain.connect(this.ctx.destination);
       osc.start(now + i * 0.08);
       osc.stop(now + i * 0.08 + 0.3);
     });
   }
+
+  playSpecial() {
+    if (this.muted) return;
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.15);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
 }
 
 /**
  * PlayableAdController Module
- * Handles game timer (35s), Auto Tutorial (Phase 1), Guided Play (Phase 2),
- * Free Play (Phase 3), End Game (Phase 4), Score/IQ updates, Combos, shuffles, hint highlights,
- * and injected styling overlays.
+ * Handles game timer, Auto Tutorial, Guided Play, Free Play, End Game,
+ * shuffles, hints, undo history, particles, and visual polish injections.
  */
 class PlayableAdController {
   constructor(gameEngine) {
@@ -527,9 +549,15 @@ class PlayableAdController {
     
     // DOM Cache
     this.handEl = null;
-    this.instructionEl = null;
     this.messageEl = null;
     this.ctaEl = null;
+    this.soundBtnEl = null;
+
+    // Hand Animation State
+    this.handTargetX = 0;
+    this.handTargetY = 0;
+    this.handCurrentX = 0;
+    this.handCurrentY = 0;
   }
 
   init() {
@@ -537,6 +565,17 @@ class PlayableAdController {
     this.createUIElements();
     this.bindControls();
     this.updateIQUI();
+
+    // Cache sound button and bind toggle
+    this.soundBtnEl = document.querySelector('.sound-btn');
+    if (this.soundBtnEl) {
+      this.soundBtnEl.addEventListener('click', () => {
+        this.toggleSound();
+      });
+    }
+
+    // Start 60fps Loop for Smooth Hand Interpolation and Idle Floating
+    this.startRenderLoop();
 
     // Start 35s Game Loop ticker (runs every 100ms)
     this.ticker = setInterval(() => {
@@ -546,55 +585,33 @@ class PlayableAdController {
 
   injectStyles() {
     const css = `
-      .tutorial-instruction {
-        position: absolute;
-        top: 20%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: rgba(15, 5, 55, 0.95);
-        border: 2px solid var(--gold-mid);
-        color: #fff;
-        padding: 8px 18px;
-        border-radius: 20px;
-        font-family: var(--ff-body);
-        font-weight: 800;
-        font-size: 14px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-        z-index: 100;
-        pointer-events: none;
-        animation: pulse-banner 1.5s infinite alternate;
-        letter-spacing: 0.5px;
-      }
-      @keyframes pulse-banner {
-        0% { transform: translate(-50%, -50%) scale(0.96); }
-        100% { transform: translate(-50%, -50%) scale(1.04); }
-      }
       .tutorial-hand {
         position: absolute;
-        width: 32px;
-        height: 32px;
+        width: 60px;
+        height: 60px;
         z-index: 200;
         pointer-events: none;
         opacity: 0;
-        transform: translate(0, 0) scale(1);
-        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.3s ease;
+        left: 0;
+        top: 0;
       }
-      .tutorial-hand.tap-pulse {
-        animation: hand-click 0.3s ease;
+      .tutorial-hand img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        transform-origin: 10% 10%;
+        transition: transform 0.15s ease-out;
       }
-      @keyframes hand-click {
-        0% { transform: scale(1); }
-        50% { transform: scale(0.75); }
-        100% { transform: scale(1); }
+      .tutorial-hand.tapped img {
+        transform: scale(0.78);
       }
       .screen-message {
         position: absolute;
-        top: 50%;
+        top: 45%;
         left: 50%;
         transform: translate(-50%, -50%) scale(0.4);
         font-family: var(--ff-title);
-        font-size: 42px;
+        font-size: 44px;
         color: var(--gold-mid);
         text-shadow: 0 0 10px rgba(0, 0, 0, 0.95), 0 0 20px var(--gold-mid);
         z-index: 150;
@@ -667,38 +684,49 @@ class PlayableAdController {
         padding: 12px 35px;
         box-shadow: 0 0 20px rgba(16, 185, 129, 0.7);
         cursor: pointer;
-        animation: pulse-button 1.2s infinite;
+        animation: bounce-btn 2s infinite;
         transition: all 0.2s ease;
         text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      }
+      @keyframes bounce-btn {
+        0%, 100%, 20%, 50%, 80% { transform: translateY(0); }
+        40% { transform: translateY(-10px); }
+        60% { transform: translateY(-5px); }
       }
       @keyframes glow-title {
         0% { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)) drop-shadow(0 0 5px rgba(255,215,0,0.5)); }
         100% { filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)) drop-shadow(0 0 20px rgba(255,215,0,0.8)); }
       }
-      @keyframes pulse-button {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.06); box-shadow: 0 0 25px rgba(16, 185, 129, 0.9); }
-        100% { transform: scale(1); }
-      }
       .floating-score {
         position: absolute;
         color: var(--gold-mid);
         font-family: var(--ff-display);
-        font-size: 20px;
+        font-size: 24px;
         text-shadow: 0 2px 5px rgba(0,0,0,0.9);
         pointer-events: none;
         z-index: 100;
         animation: float-up 0.8s ease-out forwards;
       }
+      .floating-reward {
+        position: absolute;
+        font-family: var(--ff-title);
+        font-size: 26px;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.95);
+        pointer-events: none;
+        z-index: 102;
+        animation: float-reward-anim 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+      @keyframes float-reward-anim {
+        0% { transform: scale(0.3) translateY(0); opacity: 0; }
+        50% { transform: scale(1.1) translateY(-20px); opacity: 1; }
+        100% { transform: scale(1) translateY(-40px); opacity: 0; }
+      }
       @keyframes float-up {
-        0% { transform: translateY(0); opacity: 1; }
-        100% { transform: translateY(-50px); opacity: 0; }
+        0% { transform: scale(0.5) translateY(0); opacity: 1; }
+        100% { transform: scale(1.2) translateY(-60px); opacity: 0; }
       }
       .particle {
         position: absolute;
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
         pointer-events: none;
         z-index: 90;
         opacity: 1;
@@ -706,16 +734,16 @@ class PlayableAdController {
       }
       @keyframes burst {
         to {
-          transform: translate(var(--dx), var(--dy)) scale(0.2);
+          transform: translate(var(--dx), var(--dy)) scale(0.1) rotate(180deg);
           opacity: 0;
         }
       }
       .pulse {
-        animation: pulse-element 0.3s ease-out;
+        animation: pulse-element 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       }
       @keyframes pulse-element {
         0% { transform: scale(1); }
-        50% { transform: scale(1.2); }
+        50% { transform: scale(1.25); filter: brightness(1.2); }
         100% { transform: scale(1); }
       }
       .wrong-anim {
@@ -738,9 +766,63 @@ class PlayableAdController {
         pointer-events: none;
       }
       @keyframes cellMatched {
-        0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); filter: brightness(1.2); }
+        0% { transform: scale(1); box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); filter: brightness(1.25); }
         50% { transform: scale(1.15); opacity: 0.8; }
         100% { transform: scale(0); opacity: 0; }
+      }
+      
+      /* Active Highlight Animation for selected cell */
+      .cell.highlighted {
+        animation: select-pulse 1s infinite alternate;
+      }
+      @keyframes select-pulse {
+        0% { transform: scale(1); box-shadow: 0 0 4px rgba(255, 215, 0, 0.7); }
+        100% { transform: scale(1.05); box-shadow: 0 0 12px rgba(255, 215, 0, 0.95); }
+      }
+
+      /* Cooldown animation for hint button */
+      .cooldown-active {
+        opacity: 0.5 !important;
+        pointer-events: none !important;
+        position: relative;
+      }
+      .cooldown-active::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        border-radius: inherit;
+        animation: cooldown-drain 1.5s linear forwards;
+      }
+      @keyframes cooldown-drain {
+        0% { clip-path: inset(0 0 0 0); }
+        100% { clip-path: inset(100% 0 0 0); }
+      }
+
+      /* Rotate icon for Shuffle */
+      .rotate-icon svg {
+        transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transform: rotate(360deg);
+      }
+
+      /* Flip icon for Undo */
+      .flip-icon {
+        animation: arrow-flip 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      @keyframes arrow-flip {
+        0% { transform: rotate(0); }
+        100% { transform: rotate(-360deg); }
+      }
+      
+      /* Brain Level Up Glow */
+      .brain-levelup-glow {
+        box-shadow: 0 0 30px #d8b4fe, 0 0 60px #c084fc !important;
+        animation: brain-rainbow-glow 0.8s ease-out;
+      }
+      @keyframes brain-rainbow-glow {
+        0% { transform: scale(1); filter: brightness(1.5); }
+        50% { transform: scale(1.3); filter: brightness(2.0); }
+        100% { transform: scale(1); filter: brightness(1); }
       }
     `;
     const styleEl = document.createElement('style');
@@ -751,25 +833,13 @@ class PlayableAdController {
   createUIElements() {
     const wrapper = document.querySelector('.game-wrapper');
 
-    // Create Tutorial Hand element (pointer SVG)
+    // Create Tutorial Hand element (using hand.png)
     this.handEl = document.createElement('div');
     this.handEl.className = 'tutorial-hand';
-    // Gold colored cursor pointer SVG
-    this.handEl.innerHTML = `
-      <svg viewBox="0 0 32 32" width="32" height="32" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M10 28V15.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V11c0-.83.67-1.5 1.5-1.5S16 10.17 16 11v-4.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5V9.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v12.79c-.74-.83-1.89-1.39-3.23-1.07l-2.92.7c-.55.13-.88.69-.74 1.23.09.35.34.62.66.72l4.89 1.5c1.88.58 3.17 2.33 3.17 4.3v.83c0 2.21-1.79 4-4 4H14c-2.21 0-4-1.79-4-4z" fill="#ffd700" stroke="#000" stroke-width="1.5"/>
-        <circle cx="10" cy="15" r="2" fill="#fff"/>
-      </svg>
-    `;
+    this.handEl.innerHTML = `<img src="../assets/images/hand.png" alt="Hand pointer" />`;
     wrapper.appendChild(this.handEl);
 
-    // Create Tutorial Banner
-    this.instructionEl = document.createElement('div');
-    this.instructionEl.className = 'tutorial-instruction';
-    this.instructionEl.style.display = 'none';
-    wrapper.appendChild(this.instructionEl);
-
-    // Create Large Screen Announcement
+    // Create Large Screen Announcement (Your Turn, etc.)
     this.messageEl = document.createElement('div');
     this.messageEl.className = 'screen-message';
     wrapper.appendChild(this.messageEl);
@@ -786,10 +856,11 @@ class PlayableAdController {
     `;
     wrapper.appendChild(this.ctaEl);
 
-    // Register CTA button click (standard playable redirect)
+    // Register CTA button click
     const playBtn = this.ctaEl.querySelector('#cta-play-btn');
     if (playBtn) {
       playBtn.addEventListener('click', () => {
+        this.soundManager.playSpecial();
         this.redirectToStore();
       });
     }
@@ -800,7 +871,7 @@ class PlayableAdController {
     const hintBtn = document.getElementById('hint-btn');
     if (hintBtn) {
       hintBtn.addEventListener('click', () => {
-        if (this.currentTime < 20.0 || this.isAdEnded) return; // Disabled in Phase 1 & 2
+        if (this.currentTime < 15.0 || this.isAdEnded || hintBtn.classList.contains('cooldown-active')) return;
         this.triggerHint();
       });
     }
@@ -809,7 +880,7 @@ class PlayableAdController {
     const shuffleBtn = document.getElementById('shuffle-btn');
     if (shuffleBtn) {
       shuffleBtn.addEventListener('click', () => {
-        if (this.currentTime < 20.0 || this.isAdEnded) return; // Disabled in Phase 1 & 2
+        if (this.currentTime < 15.0 || this.isAdEnded) return;
         this.triggerShuffle();
       });
     }
@@ -818,15 +889,37 @@ class PlayableAdController {
     const undoBtn = document.getElementById('undo-btn');
     if (undoBtn) {
       undoBtn.addEventListener('click', () => {
-        if (this.currentTime < 20.0 || this.isAdEnded) return; // Disabled in Phase 1 & 2
+        if (this.currentTime < 15.0 || this.isAdEnded) return;
         this.triggerUndo();
       });
     }
   }
 
+  toggleSound() {
+    this.soundManager.muted = !this.soundManager.muted;
+    if (this.soundBtnEl) {
+      if (this.soundManager.muted) {
+        this.soundBtnEl.style.opacity = '0.4';
+        // Toggle path to muted representation
+        this.soundBtnEl.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+            <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.21.05-.42.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73 4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+          </svg>
+        `;
+      } else {
+        this.soundBtnEl.style.opacity = '1';
+        this.soundBtnEl.innerHTML = `
+          <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" aria-hidden="true">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        `;
+        this.soundManager.playClick();
+      }
+    }
+  }
+
   redirectToStore() {
-    console.log("Playable redirect: Navigation to app store!");
-    // Integrate AppLovin, Google, Unity, or Mintegral redirect trigger
+    console.log("Playable redirect: Store Navigation!");
     if (typeof mraid !== "undefined" && mraid.open) {
       mraid.open();
     } else {
@@ -835,21 +928,21 @@ class PlayableAdController {
   }
 
   /**
-   * Main game ticker (every 100ms)
+   * Main game loop ticker (every 100ms)
    */
   tick() {
     if (this.isAdEnded) return;
 
     this.currentTime += 0.1;
 
-    // Phase 1 (0 to 12s) - Auto Tutorial Demonstration
-    if (this.currentTime < 12.0) {
+    // Phase 1 (0 to 15s) - Auto Tutorial Demonstration
+    if (this.currentTime < 15.0) {
       this.handleAutoTutorial();
     } 
-    // Phase 2 (12 to 20s) - Guided play
-    else if (this.currentTime >= 12.0 && this.currentTime < 20.0) {
+    // Phase 2 (15 to 20s) - Guided play
+    else if (this.currentTime >= 15.0 && this.currentTime < 20.0) {
       if (this.isInputDisabled) {
-        this.isInputDisabled = false; // Enable inputs at 12s
+        this.isInputDisabled = false; // Enable inputs at 15s
       }
       this.handleGuidedPlay();
     } 
@@ -864,58 +957,50 @@ class PlayableAdController {
   }
 
   /**
-   * 0 - 12s: Auto Tutorial Demonstration
+   * 0 - 15s: Auto Tutorial Demonstration
    */
   handleAutoTutorial() {
     const t = parseFloat(this.currentTime.toFixed(1));
 
-    // Display banner text
-    if (t === 0.1) {
-      this.instructionEl.textContent = "Tap two numbers that add up to 10";
-      this.instructionEl.style.display = 'block';
-    }
-
     // Pair 1: Row 2 Col 0 (index 10, value '2') & Row 2 Col 1 (index 11, value '2')
-    if (t === 1.0) {
-      this.moveHandToCell(10);
-    }
-    if (t === 2.0) {
-      this.tapCell(10);
+    if (t === 1.2) {
+      this.setHandTargetCell(10);
     }
     if (t === 3.0) {
-      this.moveHandToCell(11);
+      this.tapCell(10);
     }
-    if (t === 4.0) {
+    if (t === 4.2) {
+      this.setHandTargetCell(11);
+    }
+    if (t === 6.0) {
       this.tapCell(11);
     }
 
     // Pair 2: Row 5 Col 0 (index 40, value '3') & Row 5 Col 1 (index 41, value '7')
-    if (t === 6.0) {
-      this.moveHandToCell(40);
+    if (t === 8.2) {
+      this.setHandTargetCell(40);
     }
-    if (t === 7.0) {
+    if (t === 10.0) {
       this.tapCell(40);
     }
-    if (t === 8.0) {
-      this.moveHandToCell(41);
+    if (t === 11.2) {
+      this.setHandTargetCell(41);
     }
-    if (t === 9.0) {
+    if (t === 13.0) {
       this.tapCell(41);
     }
 
-    // Transition to "YOUR TURN"
-    if (t === 10.2) {
+    // Transition to "YOUR TURN!" at 13.8s
+    if (t === 13.8) {
       this.hideHand();
-      this.instructionEl.style.display = 'none';
-      this.showMessage("YOUR TURN");
+      this.showMessage("YOUR TURN!");
     }
   }
 
   /**
-   * 12 - 20s: Guided Play
+   * 15 - 20s: Guided Play
    */
   handleGuidedPlay() {
-    // Check if the user successfully completed 2 manual matches
     if (this.guidedMatchesCompleted >= 2) {
       this.hideHand();
       return;
@@ -923,10 +1008,8 @@ class PlayableAdController {
 
     this.idleTime += 0.1;
     if (this.idleTime >= 2.0) {
-      // Find a valid match to guide the user
       const pair = this.findNextPair();
       if (pair) {
-        // Just point to the first tile of the pair
         this.pointHandAtCell(pair[0]);
       }
     }
@@ -941,54 +1024,73 @@ class PlayableAdController {
 
   resetIdleTimer() {
     this.idleTime = 0;
-    // Hide tutorial hand if it's currently showing idle guidance
-    if (this.currentTime >= 12.0 && this.currentTime < 20.0 && this.guidedMatchesCompleted < 2) {
+    if (this.currentTime >= 15.0 && this.currentTime < 20.0 && this.guidedMatchesCompleted < 2) {
       this.hideHand();
     }
   }
 
   /**
-   * Hand Animations
+   * 60fps Loop for Smooth Hand Movement Easing & Floating
    */
-  moveHandToCell(index) {
+  startRenderLoop() {
+    const render = () => {
+      if (this.isAdEnded) return;
+
+      // Smooth Easing Interpolation (Lerp) for Hand Movement
+      const lerpFactor = 0.08;
+      this.handCurrentX += (this.handTargetX - this.handCurrentX) * lerpFactor;
+      this.handCurrentY += (this.handTargetY - this.handCurrentY) * lerpFactor;
+
+      // Visual Hand floating (Subtle Sine oscillation when stationary)
+      let floatOffset = 0;
+      if (Math.abs(this.handCurrentX - this.handTargetX) < 1.0) {
+        floatOffset = Math.sin(Date.now() / 250) * 2;
+      }
+
+      this.handEl.style.left = `${this.handCurrentX}px`;
+      this.handEl.style.top = `${this.handCurrentY + floatOffset}px`;
+
+      requestAnimationFrame(render);
+    };
+    requestAnimationFrame(render);
+  }
+
+  setHandTargetCell(index) {
     const cell = this.engine.boardManager.cells[index];
     if (!cell) return;
 
     const cellRect = cell.getBoundingClientRect();
     const wrapperRect = document.querySelector('.game-wrapper').getBoundingClientRect();
-    const x = cellRect.left - wrapperRect.left + cellRect.width / 2 - 16;
-    const y = cellRect.top - wrapperRect.top + cellRect.height / 2 - 8;
+    
+    // Offset target X and Y such that finger tip (top-left) points exactly to the cell center
+    this.handTargetX = cellRect.left - wrapperRect.left + cellRect.width / 2 - 6;
+    this.handTargetY = cellRect.top - wrapperRect.top + cellRect.height / 2 - 6;
 
-    this.handEl.style.left = `${x}px`;
-    this.handEl.style.top = `${y}px`;
-    this.handEl.style.opacity = '1';
-  }
-
-  pointHandAtCell(index) {
-    this.moveHandToCell(index);
-    // Bouncing/hover pointing pulse animation
-    const timeSec = this.currentTime;
-    const offset = Math.sin(timeSec * 8) * 6;
-    const styleLeft = parseFloat(this.handEl.style.left);
-    const styleTop = parseFloat(this.handEl.style.top);
-    if (!isNaN(styleLeft) && !isNaN(styleTop)) {
-      this.handEl.style.transform = `translate(${offset}px, ${offset}px)`;
+    if (this.handEl.style.opacity === '0' || !this.handEl.style.opacity) {
+      this.handCurrentX = this.handTargetX;
+      this.handCurrentY = this.handTargetY;
+      this.handEl.style.opacity = '1';
     }
   }
 
-  tapCell(index) {
-    this.handEl.classList.add('tap-pulse');
-    setTimeout(() => {
-      this.handEl.classList.remove('tap-pulse');
-    }, 300);
+  pointHandAtCell(index) {
+    this.setHandTargetCell(index);
+  }
 
-    // Direct click simulation (clicks even if input is disabled)
+  tapCell(index) {
+    this.handEl.classList.add('tapped');
+    setTimeout(() => {
+      this.handEl.classList.remove('tapped');
+    }, 150);
+
+    // Click execution
     this.engine.selectionManager.handleCellClick(index);
   }
 
   hideHand() {
     this.handEl.style.opacity = '0';
-    this.handEl.style.transform = 'translate(0, 0) scale(1)';
+    this.handTargetX = -100;
+    this.handTargetY = -100;
   }
 
   showMessage(text) {
@@ -996,11 +1098,11 @@ class PlayableAdController {
     this.messageEl.classList.add('show');
     setTimeout(() => {
       this.messageEl.classList.remove('show');
-    }, 1500);
+    }, 1000);
   }
 
   /**
-   * Matching and Scores
+   * Gameplay Events
    */
   handleMatch(idx1, idx2) {
     // 1. Score Calculation
@@ -1009,7 +1111,6 @@ class PlayableAdController {
     let isCombo = false;
 
     if (now - this.lastMatchTime < 3000) {
-      // Combo within 3 seconds of last match
       this.comboCount++;
       isCombo = true;
       if (this.comboCount === 1) points += 15;
@@ -1022,28 +1123,29 @@ class PlayableAdController {
 
     this.engine.score += points;
     this.engine.updateScoreUI();
+    this.animateScorePop();
 
     // 2. IQ Calculation
     let iqPoints = 3;
     if (isCombo) {
-      iqPoints += 5; // Combo bonus
-      this.showFloatingText("COMBO!", idx1, '#ffd700');
+      iqPoints += 5; 
+      this.showFloatingText(`COMBO!`, idx1, '#ffd700');
     }
     this.engine.iq += iqPoints;
-    this.updateIQUI();
+    this.updateIQUI(true); // true -> positive change, trigger pop and brain pulse
 
     // Sound
     this.soundManager.playCorrect();
 
-    // Target checkpoint
+    // Target check
     if (this.engine.score >= 100) {
       this.triggerVictory();
     } else {
       this.engine.checkWinCondition();
     }
 
-    // Keep count of guided play steps
-    if (this.currentTime >= 12.0 && this.currentTime < 20.0) {
+    // Phase 2 steps
+    if (this.currentTime >= 15.0 && this.currentTime < 20.0) {
       this.guidedMatchesCompleted++;
       if (this.guidedMatchesCompleted >= 2) {
         this.hideHand();
@@ -1054,10 +1156,10 @@ class PlayableAdController {
 
   handleWrongMatch() {
     this.engine.iq = Math.max(0, this.engine.iq - 2);
-    this.updateIQUI();
+    this.updateIQUI(false); // false -> negative decrease animation
   }
 
-  updateIQUI() {
+  updateIQUI(isPositive = null) {
     const iqVal = document.querySelector('.iq-number');
     const iqRank = document.querySelector('.iq-tier');
     const tubeFill = document.querySelector('.tube-rainbow-fill');
@@ -1065,9 +1167,14 @@ class PlayableAdController {
 
     if (iqVal) {
       iqVal.textContent = this.engine.iq;
+      if (isPositive === true) {
+        // Pop IQ text with glow
+        iqVal.classList.add('pulse');
+        setTimeout(() => iqVal.classList.remove('pulse'), 350);
+      }
     }
 
-    // Determine Ranks
+    // Determine Rank
     let rank = "BEGINNER";
     const iq = this.engine.iq;
     if (iq >= 31 && iq <= 60) rank = "THINKER";
@@ -1077,19 +1184,24 @@ class PlayableAdController {
 
     if (iqRank && iqRank.textContent !== rank) {
       iqRank.textContent = rank;
-      // Play rank level up sound
       this.soundManager.playLevelUp();
+      // Crossing rank: glow brain, spawn tiny stars
+      if (brain) {
+        brain.classList.add('brain-levelup-glow');
+        setTimeout(() => brain.classList.remove('brain-levelup-glow'), 800);
+        this.spawnRankStars();
+      }
     }
 
-    // Progress Pillar animation: max level 150 points
+    // Smooth Progress tube fill
     const percentage = Math.min(100, (iq / 150) * 100);
     if (tubeFill) {
-      tubeFill.style.transition = 'top 0.3s ease-out';
+      tubeFill.style.transition = 'top 0.4s cubic-bezier(0.1, 0.8, 0.3, 1)';
       tubeFill.style.top = `${100 - percentage}%`;
     }
 
     // Pulse Brain Icon
-    if (brain) {
+    if (isPositive === true && brain) {
       brain.classList.add('pulse');
       setTimeout(() => {
         brain.classList.remove('pulse');
@@ -1097,8 +1209,16 @@ class PlayableAdController {
     }
   }
 
+  animateScorePop() {
+    const scoreCard = document.getElementById('score-card');
+    if (scoreCard) {
+      scoreCard.classList.add('pulse');
+      setTimeout(() => scoreCard.classList.remove('pulse'), 350);
+    }
+  }
+
   /**
-   * floating text & particle system
+   * Floating Messages & Stars/Confetti Emitters
    */
   spawnMatchParticles(idx1, idx2) {
     const wrapper = document.querySelector('.game-wrapper');
@@ -1111,7 +1231,7 @@ class PlayableAdController {
       const x = rect.left - wrapperRect.left + rect.width / 2;
       const y = rect.top - wrapperRect.top + rect.height / 2;
 
-      // Spawn 10 particles per cell
+      // Burst lightweight sparkle particles (10 circles)
       for (let i = 0; i < 10; i++) {
         const p = document.createElement('div');
         p.className = 'particle';
@@ -1121,7 +1241,7 @@ class PlayableAdController {
         p.style.top = `${y}px`;
 
         const angle = Math.random() * Math.PI * 2;
-        const speed = 20 + Math.random() * 50;
+        const speed = 20 + Math.random() * 45;
         const dx = Math.cos(angle) * speed;
         const dy = Math.sin(angle) * speed;
 
@@ -1134,6 +1254,39 @@ class PlayableAdController {
     });
   }
 
+  spawnRankStars() {
+    // Spawn stars from progress base tube area
+    const wrapper = document.querySelector('.game-wrapper');
+    const base = document.querySelector('.tube-glow-base');
+    if (!base) return;
+
+    const baseRect = base.getBoundingClientRect();
+    const wrapperRect = wrapper.getBoundingClientRect();
+    const x = baseRect.left - wrapperRect.left + baseRect.width / 2;
+    const y = baseRect.top - wrapperRect.top;
+
+    for (let i = 0; i < 8; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.innerHTML = '✦';
+      p.style.color = '#ffd700';
+      p.style.fontSize = '12px';
+      p.style.left = `${x}px`;
+      p.style.top = `${y}px`;
+
+      const angle = (Math.random() * Math.PI) + Math.PI; // upward burst
+      const speed = 30 + Math.random() * 50;
+      const dx = Math.cos(angle) * speed;
+      const dy = Math.sin(angle) * speed;
+
+      p.style.setProperty('--dx', `${dx}px`);
+      p.style.setProperty('--dy', `${dy}px`);
+
+      wrapper.appendChild(p);
+      setTimeout(() => p.remove(), 600);
+    }
+  }
+
   spawnFloatingScore(idx1, idx2) {
     const cell1 = this.engine.boardManager.cells[idx1];
     const cell2 = this.engine.boardManager.cells[idx2];
@@ -1143,7 +1296,6 @@ class PlayableAdController {
     const r2 = cell2.getBoundingClientRect();
     const wrapperRect = document.querySelector('.game-wrapper').getBoundingClientRect();
     
-    // Average coordinate (midpoint)
     const x = (r1.left + r2.left) / 2 - wrapperRect.left + 15;
     const y = (r1.top + r2.top) / 2 - wrapperRect.top;
 
@@ -1168,14 +1320,43 @@ class PlayableAdController {
     setTimeout(() => f.remove(), 800);
   }
 
+  spawnFloatingReward(idx1, idx2, isCorrect) {
+    const cell1 = this.engine.boardManager.cells[idx1];
+    const cell2 = this.engine.boardManager.cells[idx2];
+    if (!cell1 || !cell2) return;
+
+    const r1 = cell1.getBoundingClientRect();
+    const r2 = cell2.getBoundingClientRect();
+    const wrapperRect = document.querySelector('.game-wrapper').getBoundingClientRect();
+    
+    const x = (r1.left + r2.left) / 2 - wrapperRect.left - 20;
+    const y = (r1.top + r2.top) / 2 - wrapperRect.top - 10;
+
+    const correctWords = ["WOW!", "GREAT!", "AWESOME!", "PERFECT!", "SMART!", "NICE!", "EXCELLENT!"];
+    const incorrectWords = ["TRY AGAIN", "OOPS", "NOT A MATCH"];
+
+    const rText = document.createElement('div');
+    rText.className = 'floating-reward';
+    rText.textContent = isCorrect 
+      ? correctWords[Math.floor(Math.random() * correctWords.length)]
+      : incorrectWords[Math.floor(Math.random() * incorrectWords.length)];
+    
+    rText.style.left = `${x}px`;
+    rText.style.top = `${y}px`;
+    rText.style.color = isCorrect ? 'var(--gold-mid)' : '#f87171';
+    
+    document.querySelector('.game-wrapper').appendChild(rText);
+    setTimeout(() => rText.remove(), 600);
+  }
+
   /**
-   * Solvability and solver functions
+   * Solvability & Solver
    */
   findNextPair() {
     const activeIndices = this.engine.boardManager.getAllActiveIndices();
     if (activeIndices.length < 2) return null;
 
-    // Linear / wrap-around search
+    // Linear
     for (let i = 0; i < activeIndices.length - 1; i++) {
       const idx1 = activeIndices[i];
       const idx2 = activeIndices[i + 1];
@@ -1184,7 +1365,7 @@ class PlayableAdController {
       }
     }
 
-    // Cross directional search
+    // Adjacency cross-search
     for (let i = 0; i < activeIndices.length; i++) {
       const idx1 = activeIndices[i];
       for (let j = i + 1; j < activeIndices.length; j++) {
@@ -1198,10 +1379,11 @@ class PlayableAdController {
   }
 
   /**
-   * Hint Action
+   * Bottom controls actions
    */
   triggerHint() {
     const badge = document.querySelector('#hint-btn .btn-badge');
+    const hintBtn = document.getElementById('hint-btn');
     let count = parseInt(badge.textContent, 10);
     if (count <= 0) return;
 
@@ -1212,7 +1394,7 @@ class PlayableAdController {
       count--;
       badge.textContent = count;
 
-      // Glow pair cells temporarily
+      // Glow pair cells
       const c1 = this.engine.boardManager.cells[pair[0]];
       const c2 = this.engine.boardManager.cells[pair[1]];
       c1.classList.add('hint-highlight');
@@ -1224,6 +1406,12 @@ class PlayableAdController {
 
       this.soundManager.playClick();
 
+      // Hint Cooldown Animation
+      if (hintBtn) {
+        hintBtn.classList.add('cooldown-active');
+        setTimeout(() => hintBtn.classList.remove('cooldown-active'), 1500);
+      }
+
       setTimeout(() => {
         c1.classList.remove('hint-highlight');
         c2.classList.remove('hint-highlight');
@@ -1231,11 +1419,9 @@ class PlayableAdController {
     }
   }
 
-  /**
-   * Shuffle Action
-   */
   triggerShuffle() {
     const badge = document.querySelector('#shuffle-btn .btn-badge');
+    const shuffleBtn = document.getElementById('shuffle-btn');
     let count = parseInt(badge.textContent, 10);
     if (count <= 0) return;
 
@@ -1247,9 +1433,14 @@ class PlayableAdController {
     const activeIndices = this.engine.boardManager.getAllActiveIndices();
     if (activeIndices.length < 2) return;
 
+    // Shuffle rotation animation
+    if (shuffleBtn) {
+      shuffleBtn.classList.add('rotate-icon');
+      setTimeout(() => shuffleBtn.classList.remove('rotate-icon'), 500);
+    }
+
     let solved = false;
     let attempts = 0;
-
     const originalValues = activeIndices.map(idx => {
       return parseInt(this.engine.boardManager.cells[idx].textContent.trim(), 10);
     });
@@ -1264,7 +1455,6 @@ class PlayableAdController {
         shuffledValues[j] = temp;
       }
 
-      // Apply
       activeIndices.forEach((idx, i) => {
         this.engine.boardManager.cells[idx].textContent = shuffledValues[i];
       });
@@ -1274,7 +1464,6 @@ class PlayableAdController {
       }
     }
 
-    // Force matching pair if not solved naturally
     if (!solved) {
       const idx1 = activeIndices[0];
       const idx2 = activeIndices[1] || activeIndices[0];
@@ -1291,13 +1480,17 @@ class PlayableAdController {
     this.soundManager.playClick();
   }
 
-  /**
-   * Undo Action
-   */
   triggerUndo() {
     const badge = document.querySelector('#undo-btn .btn-badge');
+    const undoBtn = document.getElementById('undo-btn');
     let count = parseInt(badge.textContent, 10);
     if (count <= 0) return;
+
+    // Flip arrow animation
+    if (undoBtn) {
+      undoBtn.classList.add('flip-icon');
+      setTimeout(() => undoBtn.classList.remove('flip-icon'), 400);
+    }
 
     const success = this.popUndoState();
     if (success) {
@@ -1348,7 +1541,7 @@ class PlayableAdController {
   }
 
   /**
-   * End Game and Victory
+   * Victory & End Game
    */
   triggerVictory() {
     this.engine.isWon = true;
@@ -1362,24 +1555,22 @@ class PlayableAdController {
     clearInterval(this.ticker);
 
     this.hideHand();
-    this.instructionEl.style.display = 'none';
 
-    // Sound Manager: play level rise sound
     this.soundManager.playLevelUp();
 
-    // Rapidly count up IQ progress up to 140 (Mastermind)
     let endIQ = 140;
     let stepIQ = this.engine.iq;
     
+    // Rapidly animate IQ progress and score
     const iqInterval = setInterval(() => {
       if (stepIQ < endIQ) {
         stepIQ = Math.min(endIQ, stepIQ + 4);
         this.engine.iq = stepIQ;
-        this.updateIQUI();
+        this.updateIQUI(true);
       } else {
         clearInterval(iqInterval);
         this.soundManager.playVictory();
-        this.spawnVictoryExplosion();
+        this.spawnConfettiExplosion();
         // Show CTA overlay
         setTimeout(() => {
           this.ctaEl.classList.add('show');
@@ -1388,25 +1579,28 @@ class PlayableAdController {
     }, 40);
   }
 
-  spawnVictoryExplosion() {
+  spawnConfettiExplosion() {
     const wrapper = document.querySelector('.game-wrapper');
     const colors = ['#ffd700', '#c4b5fd', '#818cf8', '#a7f3d0', '#f472b6'];
     
-    // Fire multiple explosions across the screen
     for (let exp = 0; exp < 4; exp++) {
       setTimeout(() => {
         const x = 50 + Math.random() * (wrapper.clientWidth - 100);
         const y = 150 + Math.random() * (wrapper.clientHeight - 300);
 
-        for (let i = 0; i < 20; i++) {
+        for (let i = 0; i < 24; i++) {
           const p = document.createElement('div');
           p.className = 'particle';
+          // Rectangular confetti particles
+          p.style.width = '10px';
+          p.style.height = '6px';
+          p.style.borderRadius = '1px';
           p.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
           p.style.left = `${x}px`;
           p.style.top = `${y}px`;
           
           const angle = Math.random() * Math.PI * 2;
-          const speed = 30 + Math.random() * 80;
+          const speed = 40 + Math.random() * 90;
           const dx = Math.cos(angle) * speed;
           const dy = Math.sin(angle) * speed;
 
