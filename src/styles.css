@@ -183,8 +183,8 @@ figure {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 4px var(--h-pad) 0px; /* Reduced top/bottom padding to tighten header height */
-  gap: 2px; /* Reduced vertical gap between header subcomponents */
+  padding: 0px var(--h-pad) 0px; /* Set top padding to 0 to tighten header */
+  gap: 0px; /* Set gap to 0 to sit title closer to top-bar */
   flex-shrink: 0;
 }
 
@@ -306,15 +306,7 @@ figure {
 
 /* ── Mission Banner ── */
 .mission-banner {
-  background: linear-gradient(180deg, #4338ca 0%, #3730a3 55%, #312e81 100%);
-  border: 1.5px solid rgba(165, 180, 252, 0.55);
-  border-radius: var(--r-pill);
-  padding: 3px 22px 4px; /* Reduced top/bottom padding to make the banner more compact */
-  box-shadow:
-    0 0 16px rgba(99, 102, 241, 0.55),
-    inset 0 1px 0 rgba(255, 255, 255, 0.20),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.20);
-  margin-top: 0px; /* Removed margin-top to position banner directly under the title */
+  display: none; /* Completely remove the Mission Target banner */
 }
 
 .mission-text {
@@ -334,7 +326,7 @@ figure {
   display: flex;
   flex: 1;
   gap: var(--panel-gap);
-  padding: 6px var(--h-pad) 2px;
+  padding: 0px var(--h-pad) 2px; /* Set top padding to 0 to pull main-content up */
   align-items: stretch;
   min-height: 0;
 }
@@ -351,8 +343,7 @@ figure {
   flex-direction: column;
   align-items: center;
   gap: 6px;
-  margin-top: -110px; /* Pull left panel elements up to align with title area */
-  margin-bottom: -110px; /* Stretch bottom down to align with main content bottom without collapsing height */
+  /* Removed negative margins completely to rely on pure flexbox layout */
 }
 
 /* ── Brain Icon ── */
@@ -624,7 +615,7 @@ figure {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px; /* Reduced vertical gap from 6px to 4px to pull hint banner upward */
 }
 
 /* ── Score Card + Target Card ── */
@@ -688,7 +679,7 @@ figure {
   background: linear-gradient(135deg, #1b1065 0%, #231280 100%);
   border: 1.5px solid rgba(139, 92, 246, 0.38);
   border-radius: var(--r-sm);
-  padding: 7px 10px;
+  padding: 5px 10px; /* Reduced vertical padding from 7px to 5px to decrease banner height */
   flex-shrink: 0;
   box-shadow:
     0 0 10px rgba(99, 102, 241, 0.22),
@@ -730,8 +721,9 @@ figure {
 
 /* ── Board Container ── */
 .board-container {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto; /* Prevent flex-stretch in height axis */
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Force square aspect ratio to keep cells perfect squares */
   background: linear-gradient(180deg, #f7f2e3 0%, #ede7d0 100%);
   border: 2.5px solid rgba(218, 175, 50, 0.60);
   border-radius: var(--r-md);
@@ -806,7 +798,7 @@ figure {
   align-items: center;
   justify-content: center;
   gap: 5px;
-  padding: 10px 6px;
+  padding: 8px 6px; /* Reduced vertical padding from 10px to 8px for 10% height reduction */
   border-radius: var(--r-pill);
   border: 1.5px solid rgba(196, 181, 253, 0.42);
   background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 55%, #4c1d95 100%);
@@ -880,7 +872,7 @@ figure {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 7px 14px; /* Reduced vertical padding from 12px to 7px to decrease footer height by 10px */
   background: linear-gradient(90deg, #1e3a8a 0%, #2563eb 50%, #1e3a8a 100%);
   border-top: 2px solid rgba(147, 197, 253, 0.32);
   box-shadow: 0 -5px 22px rgba(37, 99, 235, 0.38);
