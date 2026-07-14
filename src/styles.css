@@ -13,7 +13,8 @@
 :root {
   /* ── Layout ── */
   --game-w: 390px;
-  --left-panel-w: 48px; /* Slim panel → right panel = 390-10-5-48 = 327px → board 327×327px */
+  --left-panel-w: 48px;
+  /* Slim panel → right panel = 390-10-5-48 = 327px → board 327×327px */
   --h-pad: 5px;
   --panel-gap: 5px;
 
@@ -282,7 +283,8 @@ figure {
 }
 
 .title-line1 {
-  font-size: 37px; /* −8%: gameplay becomes the primary focus */
+  font-size: 37px;
+  /* −8%: gameplay becomes the primary focus */
   background: linear-gradient(180deg,
       #fffa80 0%,
       #ffe040 20%,
@@ -296,7 +298,8 @@ figure {
 }
 
 .title-line2 {
-  font-size: 28px; /* −7% proportional */
+  font-size: 28px;
+  /* −7% proportional */
   background: linear-gradient(180deg,
       #fff070 0%,
       var(--gold-mid) 40%,
@@ -364,14 +367,16 @@ figure {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px; /* 2px × 2 sides + ring 44px = 48px = left-panel-w */
+  padding: 2px;
+  /* 2px × 2 sides + ring 44px = 48px = left-panel-w */
   margin: 0;
   border: none;
   background: none;
 }
 
 .brain-ring {
-  width: 44px; /* 44 × 72/72 ← fitted to 48px panel: 44 + 2×2 pad = 48 */
+  width: 44px;
+  /* 44 × 72/72 ← fitted to 48px panel: 44 + 2×2 pad = 48 */
   height: 44px;
   border-radius: 50%;
   /* Rainbow conic gradient border — colors unchanged */
@@ -405,7 +410,8 @@ figure {
 }
 
 .brain-emoji {
-  font-size: 23px; /* 38 × 44/72 ≈ 23px — proportional to ring reduction */
+  font-size: 23px;
+  /* 38 × 44/72 ≈ 23px — proportional to ring reduction */
   line-height: 1;
   filter: brightness(1.25) saturate(1.35);
 }
@@ -441,11 +447,13 @@ figure {
 
 /* ── IQ Card ── */
 .iq-card {
-  width: 44px; /* matches ring width; fits in 48px panel */
+  width: 44px;
+  /* matches ring width; fits in 48px panel */
   background: linear-gradient(180deg, #1e0a54 0%, #130730 100%);
   border: 2.5px solid var(--gold-mid);
   border-radius: var(--r-md);
-  padding: 3px 4px 5px; /* compact for narrow card */
+  padding: 3px 4px 5px;
+  /* compact for narrow card */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -458,7 +466,8 @@ figure {
 
 .iq-label {
   font-family: var(--ff-body);
-  font-size: 6px; /* 8 × 44/72 ≈ 5 → 6px minimum readable */
+  font-size: 6px;
+  /* 8 × 44/72 ≈ 5 → 6px minimum readable */
   font-weight: 900;
   color: var(--gold-mid);
   letter-spacing: 0.5px;
@@ -467,7 +476,8 @@ figure {
 
 .iq-number {
   font-family: var(--ff-display);
-  font-size: 28px; /* 44 × 44/72 ≈ 27 → 28px */
+  font-size: 28px;
+  /* 44 × 44/72 ≈ 27 → 28px */
   color: #ffffff;
   line-height: 1.0;
   text-shadow: 0 0 24px rgba(255, 255, 255, 0.35);
@@ -475,7 +485,8 @@ figure {
 
 .iq-tier {
   font-family: var(--ff-body);
-  font-size: 5.5px; /* 7.5 × 44/72 ≈ 4.6 → 5.5px minimum legible */
+  font-size: 5.5px;
+  /* 7.5 × 44/72 ≈ 4.6 → 5.5px minimum legible */
   font-weight: 900;
   color: var(--p-200);
   letter-spacing: 0.5px;
@@ -487,7 +498,8 @@ figure {
   display: flex;
   flex-direction: row;
   align-items: stretch;
-  gap: 2px; /* tighter in 48px panel */
+  gap: 2px;
+  /* tighter in 48px panel */
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -506,7 +518,8 @@ figure {
 
 /* ── Tube Cap (top rounded pill end) ── */
 .tube-cap-top {
-  width: 18px; /* 28 × 18/28 — thinner pillar for 48px panel */
+  width: 18px;
+  /* 28 × 18/28 — thinner pillar for 48px panel */
   height: 9px;
   background: linear-gradient(180deg, #9333ea, #5b21b6);
   border-radius: 8px 8px 0 0;
@@ -516,7 +529,8 @@ figure {
 
 /* ── Tube Body ── */
 .tube-body {
-  width: 18px; /* matches cap-top */
+  width: 18px;
+  /* matches cap-top */
   flex: 1;
   /* min-height removed — tube flexes naturally with layout */
   position: relative;
@@ -566,7 +580,8 @@ figure {
 
 /* ── Tube Cap (bottom rounded end) ── */
 .tube-cap-bottom {
-  width: 18px; /* matches cap-top and tube-body */
+  width: 18px;
+  /* matches cap-top and tube-body */
   height: 9px;
   background: linear-gradient(180deg, #4c1d95, #2e0f5a);
   border-radius: 0 0 6px 6px;
@@ -576,7 +591,8 @@ figure {
 
 /* ── Glow Base Platform ── */
 .tube-glow-base {
-  width: 28px; /* 48 × 18/28 ≈ 31 → 28px proportional */
+  width: 28px;
+  /* 48 × 18/28 ≈ 31 → 28px proportional */
   height: 10px;
   margin-top: 3px;
   background: radial-gradient(ellipse at 50% 100%,
@@ -596,14 +612,16 @@ figure {
   /* Top padding aligns "100" with top of tube body;
      Bottom padding aligns "0" with bottom of tube body */
   padding-top: 9px;
-  padding-bottom: 13px; /* cap-bottom(9) + glow-base-center(5) ≈ 13px aligns “0” label */
+  padding-bottom: 13px;
+  /* cap-bottom(9) + glow-base-center(5) ≈ 13px aligns “0” label */
   flex: 1;
   min-height: 0;
 }
 
 .scale-mark {
   font-family: var(--ff-body);
-  font-size: 7px; /* readable in 48px panel */
+  font-size: 7px;
+  /* readable in 48px panel */
   font-weight: 700;
   color: var(--p-200);
   white-space: nowrap;
@@ -749,7 +767,8 @@ figure {
   /* 10×14 CSS Grid — 10 columns divide width, 14 rows sized by cell content */
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(14, auto); /* auto → row height = cell width (via aspect-ratio:1/1) */
+  grid-template-rows: repeat(14, auto);
+  /* auto → row height = cell width (via aspect-ratio:1/1) */
   gap: 2px;
 
   box-shadow:
@@ -760,7 +779,8 @@ figure {
 
 /* ── Grid Cell ── */
 .cell {
-  aspect-ratio: 1 / 1; /* Architecture C: cell owns its square shape */
+  aspect-ratio: 1 / 1;
+  /* Architecture C: cell owns its square shape */
   background: var(--cream-cell);
   border: 1px solid var(--cell-border);
   border-radius: 4px;
@@ -937,15 +957,18 @@ figure {
   }
 
   .title-line1 {
-    font-size: 32px; /* proportional to base 37px */
+    font-size: 32px;
+    /* proportional to base 37px */
   }
 
   .title-line2 {
-    font-size: 24px; /* proportional to base 28px */
+    font-size: 24px;
+    /* proportional to base 28px */
   }
 
   .iq-number {
-    font-size: 24px; /* proportional to base 28px */
+    font-size: 24px;
+    /* proportional to base 28px */
   }
 
   .stat-value {
