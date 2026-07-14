@@ -13,7 +13,7 @@
 :root {
   /* ── Layout ── */
   --game-w: 390px;
-  --left-panel-w: 92px;
+  --left-panel-w: 76px; /* Reduced from 92px to allocate more space for the board */
   --h-pad: 5px;
   --panel-gap: 5px;
 
@@ -430,7 +430,7 @@ figure {
 
 /* ── IQ Card ── */
 .iq-card {
-  width: 88px;
+  width: 72px; /* Reduced from 88px to fit the new left panel width */
   background: linear-gradient(180deg, #1e0a54 0%, #130730 100%);
   border: 2.5px solid var(--gold-mid);
   border-radius: var(--r-md);
@@ -673,17 +673,7 @@ figure {
 
 /* ── Hint Banner ── */
 .hint-banner {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: linear-gradient(135deg, #1b1065 0%, #231280 100%);
-  border: 1.5px solid rgba(139, 92, 246, 0.38);
-  border-radius: var(--r-sm);
-  padding: 5px 10px; /* Reduced vertical padding from 7px to 5px to decrease banner height */
-  flex-shrink: 0;
-  box-shadow:
-    0 0 10px rgba(99, 102, 241, 0.22),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  display: none; /* Completely remove the Hint banner */
 }
 
 .hint-bulb {
